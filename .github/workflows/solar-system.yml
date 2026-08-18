@@ -29,39 +29,17 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # אכלוס ה-Database בעזרת טעינת ה-Model של האפליקציה
+      # אכלוס ה-Database וסגירה נקייה של השרת
       - name: Populate Database
         run: |
-          node -e '
-            const mongoose = require("mongoose");
-            
-            async function seed() {
-              await mongoose.connect(process.env.MONGO_URI);
-              console.log("Connected to MongoDB Atlas!");
-              
-              // טעינת ה-Model המקורי שמכיל את נתוני הכוכבים
-              const Planet = require("./models/planet"); 
-              
-              // הרצת שאילתת בדיקה/הזנה מול ה-DB
-              if (Planet.insertMany && Planet.planetsData) {
-                await Planet.deleteMany({});
-                await Planet.insertMany(Planet.planetsData);
-              }
-              
-              console.log("Database populate step finished.");
-              await mongoose.disconnect();
-            }
-            
-            seed().catch(async (err) => {
-              console.log("Fallback seeding via app startup...");
-              // ניסיון גיבוי: הרצת השרת לשניה אחת כדי שורטין ההתחלה ירוץ
-              const { exec } = require("child_process");
-              const server = exec("node app.js");
-              await new Promise(res => setTimeout(res, 3000));
-              server.kill();
-              process.exit(0);
-            });
-          '
+          node app.js &
+          SERVER_PID=$!
+          sleep 5
+          kill -9 $SERVER_PID || true
+
+      # ניקוי כל תהליך שנשאר תופס את פורט 3000
+      - name: Kill Port 3000
+        run: npx kill-port 3000 || true
 
       - name: Unit Testing
         run: npx mocha app-test.js --timeout 10000 --exit
