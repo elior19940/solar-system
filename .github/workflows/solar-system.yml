@@ -29,8 +29,10 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Populate Database
-        run: node models/planet.js || true
+      - name: Populate MongoDB Data
+        run: |
+          sudo apt-get update && sudo apt-get install -y mongodb-database-tools
+          mongoimport --uri "${{ secrets.MONGO_URI }}" --collection planets --file solar-system.json --jsonArray || true
 
       - name: Unit Testing
         #run: npm test
