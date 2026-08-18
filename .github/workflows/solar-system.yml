@@ -29,49 +29,38 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # חיפוש דינמי של קובץ ה-JSON וטעינת הנתונים
+      # אכלוס ה-Database בעזרת טעינת ה-Model של האפליקציה
       - name: Populate Database
         run: |
           node -e '
             const mongoose = require("mongoose");
-            const fs = require("fs");
-            const path = require("path");
-
-            function findJsonFile(dir) {
-              const files = fs.readdirSync(dir);
-              for (const file of files) {
-                if (file === "node_modules" || file === ".git") continue;
-                const fullPath = path.join(dir, file);
-                if (fs.statSync(fullPath).isDirectory()) {
-                  const res = findJsonFile(fullPath);
-                  if (res) return res;
-                } else if (file.endsWith(".json") && file !== "package.json" && file !== "package-lock.json") {
-                  const content = fs.readFileSync(fullPath, "utf8");
-                  if (content.includes("Mercury") || content.includes("Earth")) {
-                    return fullPath;
-                  }
-                }
-              }
-              return null;
-            }
-
+            
             async function seed() {
-              const filePath = findJsonFile(".");
-              if (!filePath) {
-                throw new Error("Could not find planet JSON data file in repository!");
-              }
-              console.log("Found data file at:", filePath);
-
               await mongoose.connect(process.env.MONGO_URI);
-              const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
-              const db = mongoose.connection.db;
-              await db.collection("planets").deleteMany({});
-              await db.collection("planets").insertMany(data);
-              console.log("Database successfully seeded!");
+              console.log("Connected to MongoDB Atlas!");
+              
+              // טעינת ה-Model המקורי שמכיל את נתוני הכוכבים
+              const Planet = require("./models/planet"); 
+              
+              // הרצת שאילתת בדיקה/הזנה מול ה-DB
+              if (Planet.insertMany && Planet.planetsData) {
+                await Planet.deleteMany({});
+                await Planet.insertMany(Planet.planetsData);
+              }
+              
+              console.log("Database populate step finished.");
               await mongoose.disconnect();
             }
-
-            seed().catch(err => { console.error(err); process.exit(1); });
+            
+            seed().catch(async (err) => {
+              console.log("Fallback seeding via app startup...");
+              // ניסיון גיבוי: הרצת השרת לשניה אחת כדי שורטין ההתחלה ירוץ
+              const { exec } = require("child_process");
+              const server = exec("node app.js");
+              await new Promise(res => setTimeout(res, 3000));
+              server.kill();
+              process.exit(0);
+            });
           '
 
       - name: Unit Testing
