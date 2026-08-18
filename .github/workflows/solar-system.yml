@@ -29,13 +29,25 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Populate MongoDB Data
+      - name: Populate Database
         run: |
-          sudo apt-get update && sudo apt-get install -y mongodb-database-tools
-          mongoimport --uri "${{ secrets.MONGO_URI }}" --collection planets --file solar-system.json --jsonArray || true
+          node -e '
+            const mongoose = require("mongoose");
+            const fs = require("fs");
+            
+            async function seed() {
+              await mongoose.connect(process.env.MONGO_URI);
+              const data = JSON.parse(fs.readFileSync("solar-system.json", "utf8"));
+              const db = mongoose.connection.db;
+              await db.collection("planets").deleteMany({});
+              await db.collection("planets").insertMany(data);
+              console.log("Database successfully seeded with planets!");
+              await mongoose.disconnect();
+            }
+            seed().catch(err => { console.error(err); process.exit(1); });
+          '
 
       - name: Unit Testing
-        #run: npm test
         run: npx mocha app-test.js --timeout 10000 --exit
 
       - name: Archive Test Result
