@@ -6,6 +6,11 @@ on:
     branches:
       - main
       - 'feature/*'
+
+env:
+  MONGO_URI: 'mongodb://localhost:27017/superData'
+  MONGO_USERNAME:    ${{ env.ONGO_USERNAME }} #superuser'
+  MONGO_PASSWORD:   ${{ secrets.MONGO_PASSWORD }} #'Password123'
 jobs:
     unit-testing:
         name: Unit Testing
