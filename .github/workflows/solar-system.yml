@@ -8,7 +8,8 @@ on:
       - 'feature/*'
 
 env:
-  MONGO_URI: 'mongodb://localhost:27017/superData?authSource=admin'
+  # חיבור ישיר הכולל משתמש, סיסמה ו-authSource
+  MONGO_URI: 'mongodb://${{ vars.MONGO_USERNAME }}:${{ secrets.MONGO_PASSWORD }}@localhost:27017/superData?authSource=admin'
   MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
   MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
 
