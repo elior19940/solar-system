@@ -29,30 +29,48 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # טעינת הנתונים מתוך הנתיב הנכון
+      # חיפוש דינמי של קובץ ה-JSON וטעינת הנתונים
       - name: Populate Database
         run: |
           node -e '
             const mongoose = require("mongoose");
             const fs = require("fs");
             const path = require("path");
-            
+
+            function findJsonFile(dir) {
+              const files = fs.readdirSync(dir);
+              for (const file of files) {
+                if (file === "node_modules" || file === ".git") continue;
+                const fullPath = path.join(dir, file);
+                if (fs.statSync(fullPath).isDirectory()) {
+                  const res = findJsonFile(fullPath);
+                  if (res) return res;
+                } else if (file.endsWith(".json") && file !== "package.json" && file !== "package-lock.json") {
+                  const content = fs.readFileSync(fullPath, "utf8");
+                  if (content.includes("Mercury") || content.includes("Earth")) {
+                    return fullPath;
+                  }
+                }
+              }
+              return null;
+            }
+
             async function seed() {
+              const filePath = findJsonFile(".");
+              if (!filePath) {
+                throw new Error("Could not find planet JSON data file in repository!");
+              }
+              console.log("Found data file at:", filePath);
+
               await mongoose.connect(process.env.MONGO_URI);
-              
-              // בדיקה באיזה נתיב נמצא קובץ ה-JSON
-              let filePath = "models/planets.json";
-              if (!fs.existsSync(filePath)) filePath = "solar-system.json";
-              if (!fs.existsSync(filePath)) filePath = "planets.json";
-              
-              console.log("Loading data from:", filePath);
               const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
               const db = mongoose.connection.db;
               await db.collection("planets").deleteMany({});
               await db.collection("planets").insertMany(data);
-              console.log("Database successfully seeded with planets!");
+              console.log("Database successfully seeded!");
               await mongoose.disconnect();
             }
+
             seed().catch(err => { console.error(err); process.exit(1); });
           '
 
