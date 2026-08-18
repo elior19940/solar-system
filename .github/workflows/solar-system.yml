@@ -9,7 +9,7 @@ on:
 
 env:
   MONGO_URI: 'mongodb://localhost:27017/superData'
-  MONGO_USERNAME:    ${{ env.MONGO_USERNAME }} #superuser'
+  MONGO_USERNAME:    ${{ vars.MONGO_USERNAME }} #superuser'
   MONGO_PASSWORD:   ${{ secrets.MONGO_PASSWORD }} #'Password123'
 jobs:
     unit-testing:
