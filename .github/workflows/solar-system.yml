@@ -9,37 +9,45 @@ on:
 
 env:
   MONGO_URI: 'mongodb://localhost:27017/superData?authSource=admin'
-  MONGO_USERNAME:    ${{ vars.MONGO_USERNAME }} #superuser'
-  MONGO_PASSWORD:   ${{ secrets.MONGO_PASSWORD }} #'Password123'
-jobs:
-    unit-testing:
-        name: Unit Testing
-        runs-on: ubuntu-latest
-        services:
-          mongo:
-           image: mongo:4.4
-           ports:
-           - 27017:27017
-           env:
-            MONGO_INITDB_ROOT_USERNAME: ${{ vars.MONGO_USERNAME }}
-            MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
-        steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v7.0.1
+  MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
+  MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
 
-        - name: Setup NodeJS Version
-          uses: actions/setup-node@v7.0.0
-          with:
-            node-version: '20'
-    
-        - name: Install Dependencies
-          run: npm install
-    
-        - name: Unit Testing
-          run: npm test
-          
-        - name: Archive Test Result
-          uses: actions/upload-artifact@v7.0.1
-          with:
-            name: Mocha-Test-Result
-            path: test-results.xml
+jobs:
+  unit-testing:
+    name: Unit Testing
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:4.4
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: ${{ vars.MONGO_USERNAME }}
+          MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+        options: >-
+          --health-cmd "mongo --eval 'db.runCommand({ping: 1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7.0.1
+
+      - name: Setup NodeJS Version
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Unit Testing
+        run: npm test
+
+      - name: Archive Test Result
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: Mocha-Test-Result
+          path: test-results.xml
