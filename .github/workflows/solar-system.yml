@@ -29,15 +29,24 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
+      # טעינת הנתונים מתוך הנתיב הנכון
       - name: Populate Database
         run: |
           node -e '
             const mongoose = require("mongoose");
             const fs = require("fs");
+            const path = require("path");
             
             async function seed() {
               await mongoose.connect(process.env.MONGO_URI);
-              const data = JSON.parse(fs.readFileSync("solar-system.json", "utf8"));
+              
+              // בדיקה באיזה נתיב נמצא קובץ ה-JSON
+              let filePath = "models/planets.json";
+              if (!fs.existsSync(filePath)) filePath = "solar-system.json";
+              if (!fs.existsSync(filePath)) filePath = "planets.json";
+              
+              console.log("Loading data from:", filePath);
+              const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
               const db = mongoose.connection.db;
               await db.collection("planets").deleteMany({});
               await db.collection("planets").insertMany(data);
