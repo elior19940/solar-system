@@ -29,6 +29,9 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
+      - name: Populate Database
+        run: node models/planet.js || true
+
       - name: Unit Testing
         #run: npm test
         run: npx mocha app-test.js --timeout 10000 --exit
