@@ -29,20 +29,8 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # אכלוס ה-Database וסגירה נקייה של השרת
-      - name: Populate Database
-        run: |
-          node app.js &
-          SERVER_PID=$!
-          sleep 5
-          kill -9 $SERVER_PID || true
-
-      # ניקוי כל תהליך שנשאר תופס את פורט 3000
-      - name: Kill Port 3000
-        run: npx kill-port 3000 || true
-
       - name: Unit Testing
-        run: npx mocha app-test.js --timeout 10000 --exit
+        run: npm test
 
       - name: Archive Test Result
         if: always()
