@@ -126,7 +126,7 @@ jobs:
           with:
             context: . #Dockerfile location
             push: false
-            tags: elior19940/solar-system:${{ github.sha }}
+            tags: elio.sofer123/solar-system:${{ github.sha }}
 
         - name: Docker Image Testing
           run: |
