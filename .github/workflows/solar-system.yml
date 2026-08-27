@@ -126,7 +126,7 @@ jobs:
           with:
             context: . #Dockerfile location
             push: false
-            tags: elior.sofer123/solar-system:${{ github.sha }}
+            tags:  ${{ vars.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
 
         - name: Docker Image Testing
           run: |
@@ -136,7 +136,7 @@ jobs:
               -e MONGO_URI=$MONGO_URI \
               -e MONGO_USERNAME=$MONGO_USERNAME \
               -e MONGO_PASSWORD=$MONGO_PASSWORD \
-              elior.sofer123/solar-system:${{ github.sha }}
+               ${{ vars.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
 
             export IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' solar-system-app)
             echo $IP
@@ -150,8 +150,8 @@ jobs:
             context: . #Dockerfile location
             push: true
             tags: |
-             elior.sofer123/solar-system:${{ github.sha }}
-             ghcr.io/${{ github.Repository_owner }}/solar-system:${{ github.sha }}
+              ${{ vars.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
+              ghcr.io/${{ github.Repository_owner }}/solar-system:${{ github.sha }}
 
     dev-deploy:
       if: contains(github.ref, 'feature/')
