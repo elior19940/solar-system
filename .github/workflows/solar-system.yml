@@ -110,7 +110,7 @@ jobs:
         - name: DockeHub Login
           uses: docker/login-action@v4.6.0
           with:
-            username: ${{ vars.DOCKERHUB_USERNAME }}
+            username: ${{ vars.DOCKERHUB_EMAIL_USERNAME }}
             password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
 
